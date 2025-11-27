@@ -103,8 +103,18 @@ const getSortIcon = (key) => {
                2xl:py-3"
         :class="{ 'bg-[#2a2a2a]': isCurrentSong(song) }"
       >
-        <div class="text-xs 2xl:text-sm text-gray-500 text-center">
-          <span v-if="isCurrentSong(song) && store.isPlaying" class="text-[var(--accent-color)]">▶</span>
+        <div class="text-xs 2xl:text-sm text-gray-500 text-center flex justify-center items-center h-full">
+          <span v-if="isCurrentSong(song) && store.isPlaying" class="text-[var(--accent-color)] animate-pulse">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+          </span>
+          <span v-else-if="isCurrentSong(song) && !store.isPlaying" class="text-[var(--accent-color)]">
+             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+               <rect x="6" y="4" width="4" height="16"></rect>
+               <rect x="14" y="4" width="4" height="16"></rect>
+             </svg>
+          </span>
           <span v-else>{{ song.track_number || index + 1 }}</span>
         </div>
 
