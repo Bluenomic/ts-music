@@ -78,8 +78,8 @@ fn parse_metadata(path: &Path) -> Option<MusicTrack> {
 
 // Scan directory
 #[tauri::command]
-async fn scan_music_folder(path: String) -> Result<Vec<MusicTrack>, String> {
-    println!("Starting scan for: {}", path);
+async fn scan_music_folder(path: String, use_parallelism: bool) -> Result<Vec<MusicTrack>, String> {
+    println!("Starting scan for: {} (Parallel: {})", path, use_parallelism);
     let start_time = Instant::now();
 
     // Get path
@@ -93,12 +93,20 @@ async fn scan_music_folder(path: String) -> Result<Vec<MusicTrack>, String> {
 
     println!("Found {} files. Processing metadata...", entries.len());
 
-    // Process metadata in parallel
-    let tracks: Vec<MusicTrack> = entries
-        .par_iter()
-        .filter(|path| is_audio_file(path))
-        .filter_map(|path| parse_metadata(path))
-        .collect();
+    // Process metadata
+    let tracks: Vec<MusicTrack> = if use_parallelism {
+        entries
+            .par_iter()
+            .filter(|path| is_audio_file(path))
+            .filter_map(|path| parse_metadata(path))
+            .collect()
+    } else {
+        entries
+            .iter()
+            .filter(|path| is_audio_file(path))
+            .filter_map(|path| parse_metadata(path))
+            .collect()
+    };
 
     println!("Scanned {} tracks in {:?}", tracks.len(), start_time.elapsed());
     
