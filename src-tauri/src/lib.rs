@@ -85,25 +85,34 @@ async fn scan_music_folder(path: String, use_parallelism: bool) -> Result<Vec<Mu
     println!("Starting scan for: {} (Parallel: {})", path, use_parallelism);
     let start_time = Instant::now();
 
-    // Get path
-    let walker = WalkDir::new(&path).into_iter();
-    
-    let entries: Vec<_> = walker
-        .filter_map(|e| e.ok())
-        .filter(|e| e.file_type().is_file())
-        .map(|e| e.path().to_owned())
-        .collect();
-
-    println!("Found {} files. Processing metadata...", entries.len());
-
-    // Process metadata
     let tracks: Vec<MusicTrack> = if use_parallelism {
+        // Use jwalk for parallel scanning
+        let entries: Vec<_> = jwalk::WalkDir::new(&path)
+            .into_iter()
+            .filter_map(|e| e.ok())
+            .filter(|e| e.file_type().is_file())
+            .map(|e| e.path())
+            .collect();
+
+        println!("Found {} files (jwalk). Processing metadata...", entries.len());
+
         entries
             .par_iter()
             .filter(|path| is_audio_file(path))
             .filter_map(|path| parse_metadata(path))
             .collect()
     } else {
+        // Use walkdir for sequential scanning
+        let walker = WalkDir::new(&path).into_iter();
+        
+        let entries: Vec<_> = walker
+            .filter_map(|e| e.ok())
+            .filter(|e| e.file_type().is_file())
+            .map(|e| e.path().to_owned())
+            .collect();
+
+        println!("Found {} files (walkdir). Processing metadata...", entries.len());
+
         entries
             .iter()
             .filter(|path| is_audio_file(path))
